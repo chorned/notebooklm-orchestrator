@@ -14,10 +14,11 @@ While the heavy lifting of long-form textbook generation is delegated to cloud m
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌───────────────┐    ┌──────────────────────────────────┐  │
-│  │  Interactive  │    │  Hermes (Local 8GB) or           │  │
-│  │  Interview    │───▶│  Gemini 3.1 Flash-Lite           │  │
-│  └───────────────┘    │  (Curriculum Design & Scoping)   │  │
-│          │            └──────────────────────────────────┘  │
+│  │  Interactive  │    │  Gemini 3.1 Flash-Lite           │  │
+│  │               │    │  (Curriculum Design & Scoping)   │  │
+│  │  Interview    │───▶│                                  │  │
+│  └───────────────┘    └──────────────────────────────────┘  │
+│          │                                                  │
 │          ▼                                                  │
 │  ┌───────────────┐    ┌──────────────────────────────────┐  │
 │  │  Gemini 3.1   │    │  PHASE 1: Research Generation    │  │
