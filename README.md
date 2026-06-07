@@ -29,7 +29,7 @@ While the heavy lifting of long-form textbook generation is delegated to cloud m
 │  ┌───────────────┐    ┌──────────────────────────────────┐  │
 │  │  NotebookLM   │    │  PHASE 2: Audio Generation       │  │
 │  │ SDK + Cookie  │───▶│  Deep Dive podcast episodes      │  │
-│  │ Auth (rookiepy)│   │  (.mp3, ~100MB each)             │  │
+│  │Auth (rookiepy)│    │  (.mp3, ~100MB each)             │  │
 │  └───────────────┘    └──────────────────────────────────┘  │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
