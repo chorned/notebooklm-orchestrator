@@ -6,7 +6,7 @@ An autonomous, stateful pipeline that orchestrates Gemini 3.1 Pro for deep acade
 
 This orchestrator is designed to operate seamlessly within the Hermes Agent ecosystem.
 
-While the heavy lifting of long-form textbook generation is delegated to cloud models (Gemini 3.1 Pro), the overarching pipeline, decision-making, and execution routing can be managed by a local **8GB quantized Hermes model** (shoutout to Nous Research for building the self-improving agent framework that makes complex local orchestration possible).
+While the heavy lifting of long-form textbook generation is delegated to cloud models (Gemini 3.1 Pro in my case), the overarching pipeline, decision-making, and execution routing can be managed by any agentic orchestration tool.
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
@@ -98,7 +98,7 @@ Update your .env with the corresponding API keys.
 
 ## 🚀 Quick Start
 
-Prerequisites: Python 3.11+, Google Chrome, a Google account logged into NotebookLM, and a Gemini API Key.
+Prerequisites: Python 3.11+, Google Chrome, a Google account logged into NotebookLM, and a Gemini API Key (note: updating this script to support your preferred model is trivial)
 
 ### 1. Clone and enter the directory
 git clone https://github.com/chorned/notebooklm-orchestrator.git
@@ -127,11 +127,7 @@ In CRON mode, the engine will auto-resume the most recently modified curriculum,
 
 ## 🙌 Credits & Acknowledgements
 
-This orchestrator stands on the shoulders of giants. Massive credit to:
-
 teng-lin/notebooklm-py: Teng Lin's phenomenal work reverse-engineering the internal NotebookLM Protobufs into a stable, typed Python SDK makes this entire project possible.
-
-Nous Research: For the inspiration behind the Hermes Agent framework, proving that local, quantized models can effectively orchestrate complex pipelines.
 
 rookiepy: For providing a lightweight, cross-platform bridge to local browser cookies.
 
