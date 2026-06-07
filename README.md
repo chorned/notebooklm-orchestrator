@@ -38,36 +38,37 @@ While the heavy lifting of long-form textbook generation is delegated to cloud m
 │  │  Enables crash recovery, resume, and CRON mode       │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
+```
 
 ## ✨ Features
 
-AI-Driven Curriculum Design — Interactive interview to scope a personalized 10-lesson podcast series.
+* AI-Driven Curriculum Design — Interactive interview to scope a personalized 10-lesson podcast series.
 
-Deep Research Generation — Gemini 3.1 Pro acts as a synthetic textbook author to generate source material.
+* Deep Research Generation — Gemini 3.1 Pro acts as a synthetic textbook author to generate source material.
 
-Autonomous Audio Production — The NotebookLM SDK generates long-form "Deep Dive" podcast episodes from the synthetic research.
+* Autonomous Audio Production — The NotebookLM SDK generates long-form "Deep Dive" podcast episodes from the synthetic research.
 
-Stateful Crash Recovery — A persistent curriculum_state.json enables the pipeline to resume from any failure point.
+* Stateful Crash Recovery — A persistent curriculum_state.json enables the pipeline to resume from any failure point.
 
-Ghost Adoption — Detects and recovers audio that Google finished generating in the background after a local crash or timeout.
+* Ghost Adoption — Detects and recovers audio that Google finished generating in the background after a local crash or timeout.
 
-Stubborn Fallback Mode — A 15-minute retry loop for flaky "removed" artifact states inside NotebookLM.
+* Stubborn Fallback Mode — A 15-minute retry loop for flaky "removed" artifact states inside NotebookLM.
 
-Rate Limit Resilience — Automatic 30-minute cooldown on 429 API responses with a clean CRON exit capability.
+* Rate Limit Resilience — Automatic 30-minute cooldown on 429 API responses with a clean CRON exit capability.
 
-Local Profile Auth — Uses rookiepy to securely extract your live Google session tokens directly from your local Chrome profile, bypassing the need for brittle web scrapers.
+* Local Profile Auth — Uses rookiepy to securely extract your live Google session tokens directly from your local Chrome profile, bypassing the need for brittle web scrapers.
 
 ## 🔐 Deep Dive: Cookie Authentication & Privacy
 
 Google does not currently offer an official developer API or OAuth flow for NotebookLM. To automate audio generation, we must authenticate the unofficial SDK as a real human user.
 
-Why rookiepy?
+### Why rookiepy?
 
 Alternative approaches to bypassing this limitation usually involve spinning up a headless Chromium browser via Playwright and forcing the user to manually log in, or trying to automate the login sequence. These methods are incredibly brittle, constantly break due to Google's anti-bot CAPTCHAs, and consume heavy memory resources.
 
 Instead, this orchestrator uses rookiepy. This library securely reads your active, encrypted Google session cookies directly from your machine's Chrome SQLite database, decrypting them via your OS Keychain.
 
-The Privacy Guarantee
+### The Privacy Guarantee
 
 Because this method looks identical to how credential-stealing malware operates, we take privacy incredibly seriously:
 
@@ -99,15 +100,16 @@ Update your .env with the corresponding API keys.
 
 Prerequisites: Python 3.11+, Google Chrome, a Google account logged into NotebookLM, and a Gemini API Key.
 
-# 1. Clone and enter the directory
+### 1. Clone and enter the directory
 git clone https://github.com/chorned/notebooklm-orchestrator.git
 cd notebooklm-orchestrator
 
-# 2. Copy the environment template and fill in your keys
+### 2. Copy the environment template and fill in your keys
 cp .env.example .env
-# Edit .env with your GEMINI_API_KEY
 
-# 3. Run the bootstrapper (creates venv, installs deps, launches worker)
+Edit .env with your GEMINI_API_KEY
+
+### 3. Run the bootstrapper (creates venv, installs deps, launches worker)
 chmod +x launch_script.bash
 ./launch_script.bash
 
