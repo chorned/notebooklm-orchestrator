@@ -1,0 +1,8 @@
+venv/
+venv.old/
+__pycache__/
+*.pyc
+.DS_Store
+chrome_profile/
+research_output/
+.env
