@@ -2,7 +2,6 @@ venv/
 venv.old/
 __pycache__/
 *.pyc
-.DS_Store
-chrome_profile/
-research_output/
 .env
+chrome_profile/
+storage_state.json
