@@ -1,6 +1,5 @@
-notebooklm-py
-langchain-google-genai
-pydantic>=2.0
-python-dotenv
 aiohttp
-rookiepy
+rich
+questionary
+notebooklm-py[browser]
+fastmcp
