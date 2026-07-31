@@ -1,7 +1,21 @@
+# Python environments and cache
 venv/
 venv.old/
 __pycache__/
 *.pyc
+
+# Environment and sensitive files
 .env
-chrome_profile/
 storage_state.json
+config.json
+
+# Local state and output directories
+chrome_profile/
+running_tasks.json
+research_output/
+podcast_audio/
+*.json
+!config.example.json
+
+# If you ever create an example config or plan, you can un-ignore it:
+# !example_plan.json

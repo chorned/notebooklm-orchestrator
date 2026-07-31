@@ -1,0 +1,5 @@
+aiohttp
+rich
+questionary
+notebooklm-py[browser]
+fastmcp

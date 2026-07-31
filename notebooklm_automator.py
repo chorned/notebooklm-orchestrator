@@ -1,111 +1,76 @@
 """
-NotebookLM UI Automator
+NotebookLM Automator
 
-This module uses `playwright` to automate the NotebookLM UI in headless mode.
-It acts as the delivery mechanism for uploading AI-generated research into a NotebookLM project.
-
-We use Playwright because it handles SPA (Single Page Application) navigations 
-gracefully, without dropping the CDP WebSocket connection.
+This module provides programmatic access to the NotebookLM UI via the `notebooklm-py` SDK.
+It is responsible for taking a generated research markdown file and pushing it into
+NotebookLM to synthesize an Audio Overview (podcast).
 """
 import asyncio
 import os
-from playwright.async_api import async_playwright
+from notebooklm import NotebookLMClient, AudioFormat, AudioLength
 
-async def upload_research(episode_title: str, file_path: str):
+async def upload_research(episode_title: str, file_path: str, podcast_prompt: str = "", profile_name: str = None) -> dict:
     """
-    Uploads the generated research markdown file to a new NotebookLM project.
+    Uploads the generated research markdown file to a new NotebookLM project,
+    and starts the generation of a podcast Audio Overview.
+    
+    This function leverages the `notebooklm-py` SDK. It requires that the user 
+    has previously authenticated using `notebooklm login --browser-cookies chrome`.
     
     Args:
         episode_title: The title to give the new NotebookLM project.
-        file_path: The absolute path to the Markdown file to upload.
+        file_path: The absolute path to the Markdown file containing the research.
+        podcast_prompt: Optional custom instructions for the podcast hosts.
+        profile_name: The NotebookLM Google account profile name to use.
+        
+    Returns:
+        A dictionary containing the 'url' to the notebook, 'notebook_id', and 'task_id'.
     """
     print(f"--- Processing: {episode_title} ---")
-    print("Launching Playwright (Headless)...")
-    import cookie_extractor
     
-    print("Extracting NotebookLM session cookies...")
-    if not cookie_extractor.refresh_notebooklm_cookies("storage_state.json"):
-        print("Failed to extract cookies. Make sure you are logged into Google Chrome.")
-        return
-        
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-blink-features=AutomationControlled"]
-        )
-        context = await browser.new_context(
-            storage_state="storage_state.json",
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-        )
-        
-        try:
-            page = await context.new_page()
+    print("Connecting to NotebookLM via notebooklm-py...")
+    try:
+        # Connect to NotebookLM using the authenticated session from the specified profile.
+        async with NotebookLMClient.from_storage(profile=profile_name) as client:
             
-            # 1. Start at home
-            await page.goto("https://notebooklm.google.com/")
-            await page.wait_for_timeout(5000)
+            print("Creating new notebook project...")
+            nb = await client.notebooks.create(episode_title)
             
-            # Check if we are on the login page due to bot detection
-            if "accounts.google.com" in page.url:
-                print("WARNING: Google Bot Detection triggered. The headless browser was redirected to the login page.")
-                print("If this persists, you may need to run fetch_cookies.py again or run the browser visibly.")
-                return
+            print(f"Uploading source document: {file_path}")
+            # Add the markdown file as a source to the notebook and wait for processing to finish.
+            await client.sources.add_file(nb.id, file_path, wait=True)
             
-            # 2. Click "Create new notebook"
-            print("Clicking 'Create new notebook'...")
-            await page.evaluate("""
-                (() => {
-                    const btns = Array.from(document.querySelectorAll('button, div[role="button"]'));
-                    const btn = btns.find(b => (b.innerText || '').toLowerCase().includes('create new'));
-                    if (btn) btn.click();
-                })();
-            """)
-            await page.wait_for_timeout(5000)
+            print("Starting Audio Overview Generation...")
+            # Start generating the podcast. We use DEEP_DIVE and LONG to get comprehensive episodes.
+            instructions = podcast_prompt if podcast_prompt else None
+            status = await client.artifacts.generate_audio(
+                nb.id, 
+                instructions=instructions,
+                audio_format=AudioFormat.DEEP_DIVE,
+                audio_length=AudioLength.LONG
+            )
             
-            # 3. Enter Title if prompt appears
-            print("Waiting for title input...")
-            await page.evaluate(f"""
-                (() => {{
-                    const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
-                    const input = inputs[0];
-                    if (input) {{
-                        input.value = '{episode_title}';
-                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                        input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                    }}
-                }})();
-            """)
-                
-            await page.wait_for_timeout(1000)
+            # The generation process takes 10-15 minutes on Google's servers.
+            # Instead of blocking, we return the task ID so the CLI can poll it asynchronously.
+            print(f"Success! Project created at: https://notebook.google.com/notebook/{nb.id}")
+            print(f"Audio generation started (Task ID: {status.task_id}).")
             
-            # 4. Upload File
-            print("Uploading file...")
-            # We must use Playwright's native set_input_files for file inputs
-            file_input = page.locator('input[type="file"]')
-            if await file_input.count() > 0:
-                await file_input.first.set_input_files(file_path)
-                print("File sent to upload.")
-            else:
-                print("Failed to find file input element.")
-                    
-            await page.wait_for_timeout(10000)
+            return {
+                "url": f"https://notebook.google.com/notebook/{nb.id}",
+                "notebook_id": nb.id,
+                "task_id": status.task_id
+            }
             
-            # 5. Verification
-            if "/notebook/" in page.url:
-                print(f"Success! Project created at: {page.url}")
-            else:
-                print("Notebook creation check (URL update) did not complete.")
-                
-        finally:
-            await browser.close()
+    except Exception as e:
+        print(f"Error during NotebookLM automation: {e}")
+        raise e
 
 async def automate():
     """
-    Main entry point for the automation script. 
-    It checks the `research_output/` directory for any Markdown files
-    and attempts to upload all Markdown files found.
+    Standalone helper function to automatically upload all markdown files in the 
+    `research_output` directory and convert them into podcasts.
     """
-    RESEARCH_DIR = "/Volumes/hermes/projects/podcast-bot/research_output/"
+    RESEARCH_DIR = os.path.join(os.getcwd(), "research_output")
     if not os.path.exists(RESEARCH_DIR):
         print(f"Directory {RESEARCH_DIR} not found.")
         return
@@ -114,9 +79,7 @@ async def automate():
     
     for file in files:
         file_path = os.path.join(RESEARCH_DIR, file)
-        # Use the filename (without extension) as the NotebookLM episode title
         episode_title = os.path.splitext(file)[0].replace("_", " ").title()
-        
         await upload_research(episode_title, file_path)
         
 if __name__ == "__main__":
